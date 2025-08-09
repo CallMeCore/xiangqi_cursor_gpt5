@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>中国象棋 - 人机对弈</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="no-info">
+    <div class="app">
+      <header class="topbar">
+        <h1>中国象棋 · 人机对弈</h1>
+        <div class="controls">
+          <label>AI 深度
+            <select id="ai-depth">
+              <option value="4">4</option>
+              <option value="6" selected>6</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+            </select>
+          </label>
+          <button id="new-game">新开局</button>
+          <button id="undo">悔棋</button>
+          <label>
+            人类颜色：
+            <select id="side-to-move">
+              <option value="red" selected>红</option>
+              <option value="black">黑</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <main class="board-wrap">
+        <canvas id="board" width="720" height="800"></canvas>
+        <aside class="panel">
+          <div class="status">
+            <div>状态：<span id="status-text">初始化</span></div>
+            <div>FEN：<span id="fen-text"></span></div>
+            <div>最近一步：<span id="last-move-text">-</span></div>
+          </div>
+          <div class="engine">
+            <div>引擎：<span id="engine-status">准备中…</span></div>
+            <div class="small">若引擎未就绪，将使用“随机走子”作为临时AI。</div>
+          </div>
+          <div class="legend">
+            <h3>操作</h3>
+            <ul>
+              <li>点击棋子→再点目标格落子</li>
+              <li>支持悔棋，支持人机对弈</li>
+            </ul>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        <span>引擎推荐：Fairy-Stockfish（Xiangqi 变体）</span>
+        <a href="engine/README.txt" target="_blank">如何放置引擎文件</a>
+      </footer>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+  </html>
+
+
