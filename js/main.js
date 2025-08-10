@@ -12,6 +12,9 @@ const btnUndo = document.getElementById('undo');
 const selDepth = document.getElementById('ai-depth');
 const selSide = document.getElementById('side-to-move');
 const lastMoveText = document.getElementById('last-move-text');
+const selMode = document.getElementById('game-mode');
+const selEngineRed = document.getElementById('engine-red');
+const selEngineBlack = document.getElementById('engine-black');
 
 const game = new ChessXQ();
 let selected = null; // {r,c}
@@ -21,6 +24,7 @@ let pendingEngine = false;
 let lastMove = null; // { from:{r,c}, to:{r,c} }
 let targetHints = []; // [{r,c,capture:boolean}]
 let flippedView = false; // 人类选黑时翻转视角
+let mode = 'hva'; // hva 人机, hvh 人人, ava 机机
 
 function updateEngineStatus(msg) {
   engineStatus.textContent = msg;
@@ -39,27 +43,34 @@ function redraw() {
 }
 
 function newGame() {
+  mode = selMode.value;
   playingHumanColor = selSide.value;
   // 象棋规则固定红先（w）。人类选择黑时，AI（红）先走。
   game.reset('w');
   flippedView = playingHumanColor === 'black';
   selected = null;
+  lastMove = null;
+  targetHints = [];
   pendingEngine = false;
   redraw();
   setStatus('新开局');
   // 如果 AI 先走，立即请求引擎
-  if (!isHumanTurn()) {
+  if (mode !== 'hvh' && !isHumanTurn()) {
+    currentEngineForTurn();
     requestEngineMove();
   }
 }
 
 function isHumanTurn() {
+  if (mode === 'ava') return false;
+  if (mode === 'hvh') return true;
   const side = game.toMove() === 'w' ? 'red' : 'black';
   return side === playingHumanColor;
 }
 
 function onClick(e) {
   if (!isHumanTurn() || pendingEngine) return;
+  if (mode === 'ava') return; // 机机模式屏蔽人工点击
   const rect = canvas.getBoundingClientRect();
   const x = (e.clientX - rect.left) * (canvas.width / rect.width);
   const y = (e.clientY - rect.top) * (canvas.height / rect.height);
@@ -75,7 +86,7 @@ function onClick(e) {
       selected = null;
       redraw();
       if (!game.isGameOver()) {
-        requestEngineMove();
+        if (mode !== 'hvh') requestEngineMove();
       } else {
         setStatus(game.resultText());
       }
@@ -111,6 +122,11 @@ async function requestEngineMove() {
   setStatus('AI 思考中…');
   const depth = parseInt(selDepth.value, 10);
   try {
+    // 同步解析模式给规则（用于 Fairy 与 Pika 坐标格式差异）
+    const side = game.toMove() === 'w' ? 'red' : 'black';
+    const modeForTurn = (side === 'red' ? selEngineRed.value : selEngineBlack.value);
+    game.setParseEngine(modeForTurn === 'fairy' ? 'fairy' : 'pika');
+    if (mode !== 'hvh') currentEngineForTurn();
     const best = await engine.bestMove(game.fen(), depth);
     if (best) {
       const mv = game.uciToMove(best);
@@ -139,7 +155,16 @@ async function requestEngineMove() {
   } finally {
     pendingEngine = false;
     redraw();
-    setStatus(game.isGameOver() ? game.resultText() : '轮到你了');
+    if (game.isGameOver()) {
+      setStatus(game.resultText());
+    } else {
+      if (mode === 'ava' || (mode === 'hva' && !isHumanTurn())) {
+        // 连续让 AI 走
+        requestEngineMove();
+      } else {
+        setStatus('轮到你了');
+      }
+    }
   }
 }
 
@@ -165,6 +190,15 @@ function squareStr(s) {
   const engineRank = 9 - rank;
   return file + engineRank;
 }
+
+function currentEngineForTurn() {
+  const side = game.toMove() === 'w' ? 'red' : 'black';
+  const v = side === 'red' ? selEngineRed.value : selEngineBlack.value;
+  engine.setMode(v === 'fairy' ? 'fairy' : 'pikafish');
+}
+
+selEngineRed.addEventListener('change', () => { if (mode !== 'hvh') currentEngineForTurn(); });
+selEngineBlack.addEventListener('change', () => { if (mode !== 'hvh') currentEngineForTurn(); });
 
 function updateTargets(r, c) {
   // 生成该子的所有合法目标，区分可吃子

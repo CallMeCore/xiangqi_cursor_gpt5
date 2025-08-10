@@ -11,6 +11,25 @@
       <header class="topbar">
         <h1>中国象棋 · 人机对弈</h1>
         <div class="controls">
+          <label>AI(红)
+            <select id="engine-red">
+              <option value="pikafish">Pikafish</option>
+              <option value="fairy" selected>Fairy-Stockfish</option>
+            </select>
+          </label>
+          <label>AI(黑)
+            <select id="engine-black">
+              <option value="pikafish" selected>Pikafish</option>
+              <option value="fairy">Fairy-Stockfish</option>
+            </select>
+          </label>
+          <label>对弈模式
+            <select id="game-mode">
+              <option value="hva" selected>人机</option>
+              <option value="hvh">人人</option>
+              <option value="ava">机机</option>
+            </select>
+          </label>
           <label>AI 深度
             <select id="ai-depth">
               <option value="4">4</option>

@@ -3,6 +3,7 @@
 export class ChessXQ {
   constructor() {
     this.reset('w');
+    this.parseMode = 'pika'; // 'pika' | 'fairy'
   }
 
   reset(side = 'w') {
@@ -264,10 +265,14 @@ export class ChessXQ {
     if (!uci || uci.length < 4) return null;
     const m = uci.match(/^([a-i])(\d{1,2})([a-i])(\d{1,2})/i);
     if (!m) return null;
-    const f = parseEngineSquare(m[1] + m[2]);
-    const t = parseEngineSquare(m[3] + m[4]);
+    const f = parseEngineSquare(m[1] + m[2], this.parseMode);
+    const t = parseEngineSquare(m[3] + m[4], this.parseMode);
     if (!f || !t) return null;
     return { from: f, to: t };
+  }
+
+  setParseEngine(kind) {
+    this.parseMode = (kind === 'fairy') ? 'fairy' : 'pika';
   }
 }
 
@@ -315,15 +320,20 @@ function parseSquare(s){
   return { r: rank, c: file };
 }
 
-function parseEngineSquare(s){
+function parseEngineSquare(s, mode){
   // 从引擎 UCI 坐标转换为内部坐标
   const fileChar = s[0].toLowerCase();
   const numStr = s.slice(1);
   const file = fileChar.charCodeAt(0) - 'a'.charCodeAt(0); // 0..8（红方左到右）
-  let rank = parseInt(numStr, 10); // 0..9（红方自下而上）
+  let rank = parseInt(numStr, 10); // 可能为 0..9（Pika）或 1..10（Fairy）
   if (Number.isNaN(file) || Number.isNaN(rank)) return null;
   if (file < 0 || file > 8) return null;
-  if (rank < 0 || rank > 9) return null;
+  if (mode === 'fairy') {
+    if (rank < 1 || rank > 10) return null;
+    rank = rank - 1;
+  } else {
+    if (rank < 0 || rank > 9) return null;
+  }
   // 仅翻转行，不翻转列：
   // 引擎 a..i 为红方从左到右；我们的列从左到右与黑方一致，所以不镜像列
   const r = 9 - rank;

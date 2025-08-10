@@ -13,10 +13,10 @@ export function drawBoard(ctx) {
   ctx.fillStyle = '#f5e7c6';
   ctx.fillRect(0, 0, W, H);
 
-  // 先画河界底色，避免遮挡网格线
+  // 先画河界底色（严格位于第4与第5条横线之间）
   ctx.save();
   ctx.fillStyle = '#edd7a9';
-  ctx.fillRect(MARGIN_X, MARGIN_Y + 4 * CELL - CELL / 2, 8 * CELL, CELL);
+  ctx.fillRect(MARGIN_X, MARGIN_Y + 4 * CELL, 8 * CELL, CELL);
   ctx.restore();
 
   ctx.strokeStyle = '#7a5230';
